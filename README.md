@@ -25,9 +25,13 @@ npm run build
 
 ## 部署到 Cloudflare Pages
 
-- Framework preset：Next.js（或 None）
-- Build command：`npm ci && npm run build`
-- Output directory：`out`
+这个项目是 **静态导出**（`output: "export"`），不要选 Next.js 预设。选 Next.js 会跑 `npx opennextjs-cloudflare build` 并失败。
+
+在 Pages 项目 **Settings → Builds & deployments**：
+
+- Framework preset：**None**（不要选 Next.js）
+- Build command：`npm run build`
+- Build output directory：`out`
 - Environment variable：
   - `NEXT_PUBLIC_API_URL` = `https://gy-backend-sigma.vercel.app`
 
