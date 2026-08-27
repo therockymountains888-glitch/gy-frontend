@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #f4efe6;
+  --ink: #1f1a16;
+  --muted: #6b6258;
+  --line: #e0d6c8;
+  --accent: #0f6f64;
+  --chip: #e7f3f0;
+}
+
+@theme inline {
+  --font-sans: var(--font-noto-sans), "PingFang SC", sans-serif;
+  --font-serif: var(--font-noto-serif), "Songti SC", serif;
+  --color-background: var(--paper);
+  --color-foreground: var(--ink);
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.markdown {
+  line-height: 1.85;
+}
+
+.markdown h2,
+.markdown h3 {
+  font-family: var(--font-serif);
+  margin: 1.75rem 0 0.75rem;
+}
+
+.markdown p,
+.markdown ul,
+.markdown ol {
+  margin: 0.9rem 0;
+}
+
+.markdown a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.markdown code {
+  background: #efe6d8;
+  border-radius: 4px;
+  font-size: 0.9em;
+  padding: 0.15em 0.35em;
+}
+
+.markdown pre {
+  background: #1f1a16;
+  color: #f4efe6;
+  border-radius: 10px;
+  overflow-x: auto;
+  padding: 1rem 1.1rem;
+  margin: 1.25rem 0;
+}
+
+.markdown pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+.markdown ul,
+.markdown ol {
+  padding-left: 1.25rem;
+}
+
+.markdown li {
+  margin: 0.3rem 0;
+}
