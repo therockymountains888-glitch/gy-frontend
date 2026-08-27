@@ -29,7 +29,7 @@ npm run build
 - Build command：`npm ci && npm run build`
 - Output directory：`out`
 - Environment variable：
-  - `NEXT_PUBLIC_API_URL` = 后端 Vercel 地址，例如 `https://gy-backend.vercel.app`
+  - `NEXT_PUBLIC_API_URL` = `https://gy-backend-sigma.vercel.app`
 
 改这个变量后需要重新构建前端。
 
