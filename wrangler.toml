@@ -1,3 +1,5 @@
 name = "gy-frontend"
 compatibility_date = "2026-08-27"
-pages_build_output_dir = "out"
+
+[assets]
+directory = "./out"
