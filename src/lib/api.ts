@@ -1,11 +1,36 @@
 import type { Post, PostListItem, Tag } from "./types";
 
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
-).replace(/\/$/, "");
+const PRODUCTION_API = "https://gy-backend-sigma.vercel.app";
+
+function getApiUrl() {
+  const fromEnv = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/$/, "") ?? "";
+
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host !== "localhost" && host !== "127.0.0.1") {
+      if (!fromEnv || fromEnv.includes("localhost")) {
+        return PRODUCTION_API;
+      }
+    }
+  }
+
+  return fromEnv || "http://localhost:3001";
+}
 
 async function request<T>(path: string): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`);
+  const url = `${getApiUrl()}${path}`;
+
+  let response: Response;
+  try {
+    response = await fetch(url);
+  } catch {
+    throw new Error(`无法连接 API：${url}`);
+  }
+
+  if (!response) {
+    throw new Error(`API 无响应：${url}`);
+  }
+
   const payload = (await response.json().catch(() => null)) as
     | { data?: T; error?: string }
     | null;
