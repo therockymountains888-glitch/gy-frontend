@@ -73,3 +73,21 @@ export function publishPost(input: {
     body: JSON.stringify(input),
   });
 }
+
+export function updatePost(
+  slug: string,
+  input: {
+    password: string;
+    title: string;
+    content: string;
+    slug?: string;
+    summary?: string;
+    tagSlugs?: string[];
+  },
+) {
+  return request<Post>(`/api/posts/${encodeURIComponent(slug)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+}

@@ -64,6 +64,13 @@ export function PostPageClient() {
         </Link>
         <span className="mx-2">/</span>
         {formatDate(post.published_at)}
+        <span className="mx-2">/</span>
+        <Link
+          href={`/write/?slug=${encodeURIComponent(post.slug)}`}
+          className="hover:text-[var(--accent)]"
+        >
+          编辑
+        </Link>
       </p>
       <h1 className="mt-4 font-serif text-4xl leading-tight">{post.title}</h1>
       {post.tags.length > 0 ? (

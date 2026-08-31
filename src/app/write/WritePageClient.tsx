@@ -2,12 +2,17 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { getTags, publishPost } from "@/lib/api";
+import { getPost, getTags, publishPost, updatePost } from "@/lib/api";
 import type { Tag } from "@/lib/types";
+import { LoadingState } from "@/components/Status";
 
 export function WritePageClient() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const editingSlug = searchParams.get("slug");
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [summary, setSummary] = useState("");
@@ -16,9 +21,11 @@ export function WritePageClient() {
   const [tagSlugs, setTagSlugs] = useState<string[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [preview, setPreview] = useState(false);
+  const [loading, setLoading] = useState(Boolean(editingSlug));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [savedSlug, setSavedSlug] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,6 +41,39 @@ export function WritePageClient() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!editingSlug) {
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    setFetchError(null);
+    setSavedSlug(null);
+
+    getPost(editingSlug)
+      .then((post) => {
+        if (cancelled) return;
+        setTitle(post.title);
+        setSlug(post.slug);
+        setSummary(post.summary);
+        setContent(post.content);
+        setTagSlugs(post.tags.map((tag) => tag.slug));
+        setLoading(false);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setFetchError(err instanceof Error ? err.message : "加载失败");
+        setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [editingSlug]);
+
   function toggleTag(next: string) {
     setTagSlugs((current) =>
       current.includes(next) ? current.filter((item) => item !== next) : [...current, next],
@@ -43,20 +83,28 @@ export function WritePageClient() {
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
-    setPublishedSlug(null);
+    setSavedSlug(null);
     setSubmitting(true);
 
+    const payload = {
+      password,
+      title,
+      content,
+      slug: slug.trim() || undefined,
+      summary: summary.trim() || undefined,
+      tagSlugs,
+    };
+
     try {
-      const post = await publishPost({
-        password,
-        title,
-        content,
-        slug: slug.trim() || undefined,
-        summary: summary.trim() || undefined,
-        tagSlugs,
-      });
-      setPublishedSlug(post.slug);
+      const post = editingSlug
+        ? await updatePost(editingSlug, payload)
+        : await publishPost(payload);
+      setSavedSlug(post.slug);
+      setSlug(post.slug);
       setPassword("");
+      if (post.slug !== editingSlug) {
+        router.replace(`/write/?slug=${encodeURIComponent(post.slug)}`);
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "提交失败");
     } finally {
@@ -64,23 +112,34 @@ export function WritePageClient() {
     }
   }
 
+  const heading = editingSlug ? "编辑笔记" : "写一篇 Markdown";
+  const actionLabel = editingSlug ? "保存修改" : "提交";
+
   return (
     <div>
       <p className="text-sm text-[var(--accent)]">写笔记</p>
-      <h1 className="mt-2 font-serif text-4xl">写一篇 Markdown</h1>
+      <h1 className="mt-2 font-serif text-4xl">{heading}</h1>
       <p className="mt-3 text-[var(--muted)]">
-        标题和正文提交到后端。密码在服务端校验，不会写进前端代码。
+        {editingSlug
+          ? "改完后输入密码保存。发布时间不会变。"
+          : "标题和正文提交到后端。密码在服务端校验，不会写进前端代码。"}
       </p>
 
-      {publishedSlug ? (
+      {savedSlug ? (
         <p className="mt-6 rounded-lg border border-[var(--accent)] bg-[var(--chip)] px-4 py-3 text-sm">
-          已发布。
+          {editingSlug ? "已保存。" : "已发布。"}
           <Link
-            href={`/post/?slug=${encodeURIComponent(publishedSlug)}`}
+            href={`/post/?slug=${encodeURIComponent(savedSlug)}`}
             className="ml-2 text-[var(--accent)] underline"
           >
             打开文章
           </Link>
+        </p>
+      ) : null}
+
+      {fetchError ? (
+        <p className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {fetchError}
         </p>
       ) : null}
 
@@ -90,6 +149,9 @@ export function WritePageClient() {
         </p>
       ) : null}
 
+      {loading ? <div className="mt-8"><LoadingState text="正在载入原文…" /></div> : null}
+
+      {!loading && !fetchError ? (
       <form className="mt-8 space-y-5" onSubmit={onSubmit}>
         <label className="block">
           <span className="text-sm font-medium">标题</span>
@@ -104,7 +166,9 @@ export function WritePageClient() {
 
         <label className="block">
           <span className="text-sm font-medium">URL slug</span>
-          <span className="ml-2 text-xs text-[var(--muted)]">英文短横线，留空则自动生成</span>
+          <span className="ml-2 text-xs text-[var(--muted)]">
+            {editingSlug ? "改了会换文章地址" : "英文短横线，留空则自动生成"}
+          </span>
           <input
             value={slug}
             onChange={(event) => setSlug(event.target.value)}
@@ -199,9 +263,10 @@ export function WritePageClient() {
           disabled={submitting}
           className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm text-white disabled:opacity-60"
         >
-          {submitting ? "提交中…" : "提交"}
+          {submitting ? "提交中…" : actionLabel}
         </button>
       </form>
+      ) : null}
     </div>
   );
 }
