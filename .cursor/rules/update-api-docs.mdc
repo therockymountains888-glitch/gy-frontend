@@ -1,0 +1,14 @@
+---
+description: 增改后端接口调用时同步更新 /docs/ 接口文档
+globs: src/lib/api.ts,src/lib/apiDocs.ts,src/app/docs/**/*.tsx
+alwaysApply: false
+---
+
+# 接口文档必须同步
+
+`/docs/` 的数据源是 `src/lib/apiDocs.ts`。后端 `gy-backend/src/routes/` 有新接口、改路径/方法/请求体/错误码时，同一轮改动里更新 `apiEndpoints`。
+
+- 加接口：补一条，含 method、path、参数、成功 JSON、错误码、curl
+- 改接口：改对应条目，不要留下过期示例
+- 删接口：删掉条目
+- 密码示例只用 `<PUBLISH_PASSWORD>`
