@@ -16,6 +16,7 @@ export function WritePageClient() {
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [summary, setSummary] = useState("");
+  const [originalSummary, setOriginalSummary] = useState("");
   const [content, setContent] = useState("");
   const [password, setPassword] = useState("");
   const [tagSlugs, setTagSlugs] = useState<string[]>([]);
@@ -59,6 +60,7 @@ export function WritePageClient() {
         setTitle(post.title);
         setSlug(post.slug);
         setSummary(post.summary);
+        setOriginalSummary(post.summary);
         setContent(post.content);
         setTagSlugs(post.tags.map((tag) => tag.slug));
         setLoading(false);
@@ -86,12 +88,15 @@ export function WritePageClient() {
     setSavedSlug(null);
     setSubmitting(true);
 
+    const trimmedSummary = summary.trim();
+    const summaryUnchanged = Boolean(editingSlug) && trimmedSummary === originalSummary.trim();
+
     const payload = {
       password,
       title,
       content,
       slug: slug.trim() || undefined,
-      summary: summary.trim() || undefined,
+      summary: !trimmedSummary || summaryUnchanged ? undefined : trimmedSummary,
       tagSlugs,
     };
 
@@ -101,6 +106,8 @@ export function WritePageClient() {
         : await publishPost(payload);
       setSavedSlug(post.slug);
       setSlug(post.slug);
+      setSummary(post.summary);
+      setOriginalSummary(post.summary);
       setPassword("");
       if (post.slug !== editingSlug) {
         router.replace(`/write/?slug=${encodeURIComponent(post.slug)}`);
@@ -179,7 +186,9 @@ export function WritePageClient() {
 
         <label className="block">
           <span className="text-sm font-medium">摘要</span>
-          <span className="ml-2 text-xs text-[var(--muted)]">可选，默认取正文开头</span>
+          <span className="ml-2 text-xs text-[var(--muted)]">
+            给列表用。不改则保存时按正文重新生成；详情页展示的是正文
+          </span>
           <input
             value={summary}
             onChange={(event) => setSummary(event.target.value)}
