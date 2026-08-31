@@ -4,6 +4,7 @@ const nav = [
   { href: "/", label: "首页" },
   { href: "/posts/", label: "文章" },
   { href: "/tags/", label: "目录" },
+  { href: "/write/", label: "写笔记" },
 ];
 
 export function Header() {

@@ -19,6 +19,8 @@
 
 # production
 /build
+/webpack-tsx-demo/node_modules
+/webpack-tsx-demo/dist
 
 # misc
 .DS_Store

@@ -17,12 +17,12 @@ function getApiUrl() {
   return fromEnv || "http://localhost:3001";
 }
 
-async function request<T>(path: string): Promise<T> {
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const url = `${getApiUrl()}${path}`;
 
   let response: Response;
   try {
-    response = await fetch(url);
+    response = await fetch(url, init);
   } catch {
     throw new Error(`无法连接 API：${url}`);
   }
@@ -57,4 +57,19 @@ export function getPost(slug: string) {
 
 export function getTags() {
   return request<Tag[]>("/api/tags");
+}
+
+export function publishPost(input: {
+  password: string;
+  title: string;
+  content: string;
+  slug?: string;
+  summary?: string;
+  tagSlugs?: string[];
+}) {
+  return request<Post>("/api/posts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
 }
